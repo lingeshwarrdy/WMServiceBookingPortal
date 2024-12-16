@@ -1,0 +1,6 @@
+package com.edubridge.ServiceBookingPortal.repository;
+
+@Repo
+public interface AdRepository extends JpaRepository<Ad,Long>{
+
+}

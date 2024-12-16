@@ -1,0 +1,5 @@
+package com.edubridge.ServiceBookingPortal.configs;
+
+public class SimpleCorsFilter {
+
+}

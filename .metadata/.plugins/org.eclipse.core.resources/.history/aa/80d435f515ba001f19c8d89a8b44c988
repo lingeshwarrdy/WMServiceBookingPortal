@@ -1,0 +1,52 @@
+package com.edubridge.ServiceBookingPortal.configs;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig {
+
+    // Define a PasswordEncoder bean for hashing passwords (BCrypt is a good choice)
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable()) // Disable CSRF (only recommended for stateless API or if needed for simplicity)
+            .authorizeRequests(auth -> auth
+                .requestMatchers("/public/**", "/login", "/signup", "/authenticate").permitAll() // Use requestMatchers instead of antMatchers
+                .anyRequest().authenticated() // Require authentication for all other endpoints
+            )
+            .formLogin(form -> form
+                .loginPage("/login") // Specify the login page URL
+                .defaultSuccessUrl("/home", true) // Redirect to the home page after successful login
+                .permitAll() // Allow everyone to access the login page
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout") // Specify the logout URL
+                .logoutSuccessUrl("/login?logout") // Redirect to login page after logout
+                .permitAll() // Allow everyone to access the logout functionality
+            );
+
+        return http.build();
+    }
+
+    // CORS configuration to allow your Angular frontend to communicate with the backend
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:4200") // Allow Angular frontend URL
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed HTTP methods
+                .allowedHeaders("*") // Allow all headers
+                .allowCredentials(true); // Allow credentials (cookies, etc.)
+    }
+}

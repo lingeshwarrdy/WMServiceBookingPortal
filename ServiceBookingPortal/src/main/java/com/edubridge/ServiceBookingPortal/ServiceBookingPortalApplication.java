@@ -1,0 +1,13 @@
+package com.edubridge.ServiceBookingPortal;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ServiceBookingPortalApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ServiceBookingPortalApplication.class, args);
+	}
+
+}

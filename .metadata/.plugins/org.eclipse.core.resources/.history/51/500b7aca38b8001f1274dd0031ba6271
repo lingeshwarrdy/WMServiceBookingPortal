@@ -1,0 +1,19 @@
+package com.edubridge.ServiceBookingPortal.services.company;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.edubridge.ServiceBookingPortal.repository.AdRepository;
+import com.edubridge.ServiceBookingPortal.repository.UserRepository;
+
+@Service
+public class CompanyServiceImpl implements CompanyService{
+	
+	
+	@Autowired
+	private UserRepository userRepository;
+	
+	@Autowired
+	private AdRepository adRepository;
+
+}

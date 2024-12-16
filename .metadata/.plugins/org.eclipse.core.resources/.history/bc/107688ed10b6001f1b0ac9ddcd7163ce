@@ -1,0 +1,42 @@
+package com.edubridge.ServiceBookingPortal.util;
+
+import java.security.Key;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
+@Component
+public class JwtUtil {
+	
+	public static final String SECRET ="CPP5G1JFS2DJY56H5U8A8EG2WGV6ZCK1JHE4MAJWR02ADO6T6ETCYVVSIDELH2TO";
+	
+	private String createToken(Map<String,Object> claims,String userName) {
+		return Jwts.builder()
+				.setClaims(claims)
+				.setSubject(userName)
+				.setIssuedAt(new Date(System.currentTimeMillis()))
+				.setExpiration(new Date(System.currentTimeMillis()+100*60*30))
+				.signWith(SignatureAlgorithm.HS256,getSignKey()).compact();
+				
+	}
+	
+	private Key getSignKey() {
+		byte[] keyBytes =Decoders.BASE64.decode(SECRET);
+		return Keys.hmacShaKeyFor(keyBytes);
+	}
+	
+	public String generateToken(String userName) {
+		Map<String,Object>claims=new HashMap<>();
+		return createToken(claims,userName);
+	}
+	
+
+}

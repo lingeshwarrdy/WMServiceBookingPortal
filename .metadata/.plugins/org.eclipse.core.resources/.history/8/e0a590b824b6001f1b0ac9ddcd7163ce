@@ -1,0 +1,48 @@
+package com.edubridge.ServiceBookingPortal.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.edubridge.ServiceBookingPortal.dto.SignupRequestDTO;
+import com.edubridge.ServiceBookingPortal.dto.UserDto;
+import com.edubridge.ServiceBookingPortal.services.authentication.AuthentService;
+
+@RestController
+@RequestMapping("/authent")
+public class AuthenticationController {
+
+	@Autowired
+	private AuthentService authentService;
+
+	@PostMapping("/client/signup")
+
+	public ResponseEntity<?> signupClient(@RequestBody SignupRequestDTO signupRequestDTO) {
+
+		if (authentService.presentByEmail(signupRequestDTO.getEmail())) {
+			return new ResponseEntity<>("Client already exists with this Email !", HttpStatus.NOT_ACCEPTABLE);
+		}
+
+		UserDto createdUser = authentService.signupClient(signupRequestDTO);
+
+		return new ResponseEntity<>(createdUser, HttpStatus.OK);
+	}
+	
+	@PostMapping("/company/signup")
+	public ResponseEntity<?> signupCompany(@RequestBody SignupRequestDTO signupRequestDTO) {
+
+		if (authentService.presentByEmail(signupRequestDTO.getEmail())) {
+			return new ResponseEntity<>("Company already exists with this Email !", HttpStatus.NOT_ACCEPTABLE);
+		}
+
+		UserDto createdUser = authentService.signupClient(signupRequestDTO);
+
+		return new ResponseEntity<>(createdUser, HttpStatus.OK);
+	}
+
+}

@@ -1,0 +1,5 @@
+package com.edubridge.ServiceBookingPortal.util;
+
+public class JwtUtil {
+
+}

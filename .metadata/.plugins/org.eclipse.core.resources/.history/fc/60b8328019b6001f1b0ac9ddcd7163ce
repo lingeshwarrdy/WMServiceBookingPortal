@@ -1,0 +1,5 @@
+package com.edubridge.ServiceBookingPortal.services.jwt;
+
+public class JwtRequestFilter {
+
+}

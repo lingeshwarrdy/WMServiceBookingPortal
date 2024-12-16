@@ -1,0 +1,114 @@
+package com.edubridge.ServiceBookingPortal.controller;
+
+import java.io.IOException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.edubridge.ServiceBookingPortal.dto.AuthenticationRequest;
+import com.edubridge.ServiceBookingPortal.dto.SignupRequestDTO;
+import com.edubridge.ServiceBookingPortal.dto.UserDto;
+import com.edubridge.ServiceBookingPortal.entity.User;
+import com.edubridge.ServiceBookingPortal.repository.UserRepository;
+import com.edubridge.ServiceBookingPortal.services.authentication.AuthentService;
+import com.edubridge.ServiceBookingPortal.services.jwt.UserDetailsServiceImpl;
+import com.edubridge.ServiceBookingPortal.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+@RestController
+public class AuthenticationController {
+
+    @Autowired
+    private AuthentService authentService;
+
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private AuthenticationManager authenticationManager; // Injecting AuthenticationManager
+
+    public static final String TOKEN_PREFIX = "Bearer ";
+    public static final String HEADER_STRING = "Authorization";
+
+    @PostMapping("/client/sign-up")
+    public ResponseEntity<?> signupClient(@RequestBody SignupRequestDTO signupRequestDTO) {
+        if (authentService.presentByEmail(signupRequestDTO.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Client already exists with this Email!");
+        }
+
+        UserDto createdUser = authentService.signupClient(signupRequestDTO);
+        return ResponseEntity.ok(createdUser);
+    }
+
+    @PostMapping("/company/sign-up")
+    public ResponseEntity<?> signupCompany(@RequestBody SignupRequestDTO signupRequestDTO) {
+        if (authentService.presentByEmail(signupRequestDTO.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("Company already exists with this Email!");
+        }
+
+        UserDto createdUser = authentService.signupCompany(signupRequestDTO);
+        return ResponseEntity.ok(createdUser);
+    }
+
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest,
+                                                        HttpServletResponse response) throws IOException, JSONException {
+        try {
+            // Authenticate the user
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            authenticationRequest.getUsername(),
+                            authenticationRequest.getPassword()
+                    )
+            );
+
+            // Load user details and generate JWT
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+            final String jwt = jwtUtil.generateToken(userDetails.getUsername());
+
+            // Fetch user entity for additional data
+            User user = userRepository.findFirstByEmail(authenticationRequest.getUsername());
+
+            // Prepare JSON response
+            JSONObject jsonResponse = new JSONObject()
+                    .put("userId", user.getId())
+                    .put("role", user.getRole());
+
+            // Set response headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Access-Control-Expose-Headers", "Authorization");
+            headers.add("Access-Control-Allow-Headers", "Authorization, X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept, X-Custom-header");
+            headers.add(HEADER_STRING, TOKEN_PREFIX + jwt);
+
+            response.setHeader(HEADER_STRING, TOKEN_PREFIX + jwt);
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(jsonResponse.toString());
+
+        } catch (BadCredentialsException e) {
+            // Return error if authentication fails
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Incorrect username or password");
+        }
+    }
+}
